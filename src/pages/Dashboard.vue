@@ -1,74 +1,48 @@
 <template>
-  <div class="py-6">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
-      
-      <!-- Pages List -->
-      <div class="mt-8">
-        <h2 class="text-lg font-medium text-gray-900">Your Pages</h2>
-        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div
-            v-for="page in store.pages"
-            :key="page.id"
-            class="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400"
+  <div class="min-h-screen bg-gray-100">
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <!-- Header -->
+      <div class="px-4 py-6 sm:px-0">
+        <div class="flex justify-between items-center">
+          <h1 class="text-3xl font-bold text-gray-900">Pages</h1>
+          <button
+            @click="createNewPage"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            <div class="flex-1 min-w-0">
-              <router-link
-                :to="{ name: 'Builder', query: { page: page.id }}"
-                class="focus:outline-none"
-              >
-                <span class="absolute inset-0" aria-hidden="true" />
-                <p class="text-sm font-medium text-gray-900">
-                  {{ page.name }}
-                </p>
-              </router-link>
-            </div>
-            <div class="flex-shrink-0">
-              <router-link
-                :to="{ name: 'Preview', params: { pageId: page.id }}"
-                class="text-sm text-indigo-600 hover:text-indigo-900"
-              >
-                Preview
-              </router-link>
-            </div>
-          </div>
+            Create New Page
+          </button>
         </div>
       </div>
 
-      <!-- Create New Page Button -->
-      <div class="mt-8">
-        <button
-          @click="showNewPageModal = true"
-          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+      <!-- Pages Grid -->
+      <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          v-for="page in pages"
+          :key="page.id"
+          class="bg-white overflow-hidden shadow rounded-lg"
         >
-          Create New Page
-        </button>
-      </div>
-    </div>
-
-    <!-- New Page Modal -->
-    <div v-if="showNewPageModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-      <div class="bg-white rounded-lg p-6 max-w-sm w-full">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Create New Page</h3>
-        <input
-          v-model="newPageName"
-          type="text"
-          placeholder="Page Name"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md"
-        />
-        <div class="mt-4 flex justify-end space-x-3">
-          <button
-            @click="showNewPageModal = false"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
-          >
-            Cancel
-          </button>
-          <button
-            @click="createNewPage"
-            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md"
-          >
-            Create
-          </button>
+          <div class="p-6">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-medium text-gray-900">{{ page.name }}</h3>
+              <div class="flex space-x-2">
+                <button
+                  @click="editPage(page)"
+                  class="text-blue-600 hover:text-blue-900"
+                >
+                  Edit
+                </button>
+                <button
+                  @click="deletePage(page.id)"
+                  class="text-red-600 hover:text-red-900"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+            <p class="mt-2 text-sm text-gray-500">
+              Last modified: {{ formatDate(page.updatedAt) }}
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -76,22 +50,80 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useBuilderStore } from '../store/builderStore'
+import { useBuilderStore } from '@/store/builderStore'
 
 const router = useRouter()
-const store = useBuilderStore()
+const builderStore = useBuilderStore()
+const pages = ref([])
 
-const showNewPageModal = ref(false)
-const newPageName = ref('')
+onMounted(async () => {
+  try {
+    pages.value = await builderStore.getAllPages()
+  } catch (error) {
+    console.error('Error loading pages:', error)
+  }
+})
 
-const createNewPage = () => {
-  if (newPageName.value.trim()) {
-    const page = store.createPage(newPageName.value.trim())
-    showNewPageModal.value = false
-    newPageName.value = ''
-    router.push({ name: 'Builder', query: { page: page.id } })
+const createNewPage = async () => {
+  try {
+    const pageName = prompt('Enter page name:')
+    if (!pageName) return
+
+    const newPage = {
+      id: Date.now().toString(),
+      name: pageName,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+
+    await builderStore.createPage(newPage)
+    pages.value = await builderStore.getAllPages()
+    
+    // Navigate to the builder with the new page ID
+    router.push({
+      path: '/dashboard/builder',
+      query: { page: newPage.id }
+    })
+  } catch (error) {
+    console.error('Error creating page:', error)
   }
 }
-</script> 
+
+const editPage = (page) => {
+  router.push({
+    path: '/dashboard/builder',
+    query: { page: page.id }
+  })
+}
+
+const deletePage = async (pageId) => {
+  if (confirm('Are you sure you want to delete this page?')) {
+    try {
+      await builderStore.deletePage(pageId)
+      pages.value = await builderStore.getAllPages()
+    } catch (error) {
+      console.error('Error deleting page:', error)
+    }
+  }
+}
+
+const formatDate = (dateString) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+</script>
+
+<style scoped>
+/* Add hover effect for delete button */
+.text-red-600:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease-in-out;
+}
+</style> 

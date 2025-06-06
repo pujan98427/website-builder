@@ -1,51 +1,47 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "../pages/Home.vue";
-
-const routes = [
-  {
-    path: "/",
-    name: "Home",
-    component: Home,
-  },
-  {
-    path: "/login",
-    name: "Login",
-    component: () => import("../pages/Login.vue"),
-  },
-  {
-    path: "/dashboard",
-    name: "Dashboard",
-    component: () => import("../layouts/DashboardLayout.vue"),
-    children: [
-      {
-        path: "",
-        name: "DashboardHome",
-        component: () => import("../pages/Dashboard.vue"),
-      },
-      {
-        path: "builder",
-        name: "Builder",
-        component: () => import("../pages/Builder.vue"),
-      },
-      {
-        path: "preview/:pageId",
-        name: "Preview",
-        component: () => import("../pages/PreviewPage.vue"),
-      },
-    ],
-  },
-];
+import Dashboard from "@/pages/Dashboard.vue";
+import Builder from "@/components/builder/Builder.vue";
+import PageList from "@/components/pages/PageList.vue";
+import Preview from "@/components/preview/Preview.vue";
 
 const router = createRouter({
   history: createWebHistory(),
-  routes,
+  routes: [
+    {
+      path: "/",
+      redirect: "/pages",
+    },
+    {
+      path: "/pages",
+      name: "pages",
+      component: PageList,
+    },
+    {
+      path: "/builder/:id",
+      name: "builder",
+      component: Builder,
+      props: true,
+    },
+    {
+      path: "/:id",
+      name: "preview",
+      component: Preview,
+      props: true,
+    },
+    // Catch all route - redirect to pages
+    {
+      path: "/:pathMatch(.*)*",
+      redirect: "/pages",
+    },
+  ],
 });
 
-// Navigation guard for authentication
+// Navigation guard to handle any redirects
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = localStorage.getItem("isAuthenticated");
-  if (to.name !== "Login" && !isAuthenticated) {
-    next({ name: "Login" });
+  // If trying to access a non-existent route, redirect to pages
+  if (to.name === undefined) {
+    next({ name: "pages" });
   } else {
     next();
   }

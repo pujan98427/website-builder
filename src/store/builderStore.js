@@ -4,6 +4,7 @@ export const useBuilderStore = defineStore("builder", {
   state: () => ({
     pages: [],
     currentPage: null,
+    layouts: {},
     selectedElement: null,
     elements: [],
     user: {
@@ -33,19 +34,86 @@ export const useBuilderStore = defineStore("builder", {
     },
 
     // Page Management
-    createPage(name) {
-      const page = {
-        id: Date.now().toString(),
-        name,
-        elements: [],
-      };
-      this.pages.push(page);
-      this.saveToLocalStorage();
-      return page;
+    async createPage(page) {
+      try {
+        // Add page to state
+        this.pages.push(page);
+        return page;
+      } catch (error) {
+        console.error("Error creating page:", error);
+        throw error;
+      }
     },
 
-    setCurrentPage(pageId) {
-      this.currentPage = this.pages.find((p) => p.id === pageId);
+    async updatePage(pageId, updates) {
+      try {
+        const index = this.pages.findIndex((p) => p.id === pageId);
+        if (index !== -1) {
+          this.pages[index] = { ...this.pages[index], ...updates };
+          return this.pages[index];
+        }
+        throw new Error("Page not found");
+      } catch (error) {
+        console.error("Error updating page:", error);
+        throw error;
+      }
+    },
+
+    async deletePage(pageId) {
+      try {
+        const index = this.pages.findIndex((p) => p.id === pageId);
+        if (index !== -1) {
+          this.pages.splice(index, 1);
+          // Remove layout from state
+          delete this.layouts[pageId];
+          return true;
+        }
+        throw new Error("Page not found");
+      } catch (error) {
+        console.error("Error deleting page:", error);
+        throw error;
+      }
+    },
+
+    async getPage(pageId) {
+      try {
+        const page = this.pages.find((p) => p.id === pageId);
+        if (!page) {
+          throw new Error("Page not found");
+        }
+        return page;
+      } catch (error) {
+        console.error("Error getting page:", error);
+        throw error;
+      }
+    },
+
+    async getAllPages() {
+      try {
+        return this.pages;
+      } catch (error) {
+        console.error("Error getting pages:", error);
+        throw error;
+      }
+    },
+
+    async saveLayout(pageId, layout) {
+      try {
+        this.layouts[pageId] = layout;
+        return true;
+      } catch (error) {
+        console.error("Error saving layout:", error);
+        throw error;
+      }
+    },
+
+    async getLayout(pageId) {
+      try {
+        return this.layouts[pageId] || [];
+      } catch (error) {
+        console.error("Error getting layout:", error);
+        throw error;
+      }
     },
 
     // Element Management

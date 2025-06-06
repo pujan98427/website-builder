@@ -277,11 +277,16 @@
 import { ref, computed } from 'vue'
 import EditableText from './EditableText.vue'
 import Heading from './Heading.vue'
+import { useDebounceFn } from '@vueuse/core'
 
 const props = defineProps({
-  id: {
-    type: [String, Number],
+  column: {
+    type: Object,
     required: true
+  },
+  isPreviewMode: {
+    type: Boolean,
+    default: false
   },
   span: {
     type: Number,
@@ -289,7 +294,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['delete', 'resize', 'move', 'content-move'])
+const emit = defineEmits(['update', 'delete', 'resize', 'move', 'content-move'])
 
 // Element Types
 const basicElements = [
@@ -309,10 +314,10 @@ const advancedElements = [
 // State
 const showElementTypeMenu = ref(false)
 const showStyleEditor = ref(false)
-const elementType = ref('text')
-const content = ref('')
-const headingLevel = ref(2)
 const isDragging = ref(false)
+const content = ref('')
+const elementType = ref('text')
+const headingLevel = ref(1)
 const imageInput = ref(null)
 const galleryImages = ref([])
 
@@ -323,18 +328,18 @@ const styles = ref({
   fontWeight: 'normal',
   color: '#000000',
   backgroundColor: '#ffffff',
-  padding: 16,
+  padding: 0,
   margin: 0,
-  borderWidth: 1,
+  borderWidth: 0,
   borderStyle: 'solid',
-  borderColor: '#e5e7eb'
+  borderColor: '#000000'
 })
 
 // Computed Styles
 const computedStyles = computed(() => ({
-  fontFamily: styles.value.fontFamily === 'sans' ? 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif' :
-              styles.value.fontFamily === 'serif' ? 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif' :
-              'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+  fontFamily: styles.value.fontFamily === 'sans' ? 'system-ui, -apple-system, sans-serif' : 
+              styles.value.fontFamily === 'serif' ? 'Georgia, serif' : 
+              'monospace',
   fontSize: `${styles.value.fontSize}px`,
   fontWeight: styles.value.fontWeight,
   color: styles.value.color,
@@ -350,70 +355,67 @@ const computedStyles = computed(() => ({
 const changeElementType = (type) => {
   elementType.value = type
   showElementTypeMenu.value = false
-  // Reset content when changing element type
-  content.value = ''
-  galleryImages.value = []
+  emit('update', props.column)
 }
 
-const updateContent = (value) => {
-  content.value = value
+const updateContent = (newContent) => {
+  content.value = newContent
+  emit('update', props.column)
 }
 
 const updateHeadingLevel = (level) => {
   headingLevel.value = level
+  emit('update', props.column)
 }
 
-const handleDragStart = (e) => {
+const handleDragStart = (event) => {
   isDragging.value = true
-  e.dataTransfer.setData('text/plain', JSON.stringify({
+  event.dataTransfer.setData('text/plain', JSON.stringify({
     type: 'column',
-    id: props.id
+    id: props.column.id
   }))
 }
 
-const handleDrop = (e) => {
+const handleDrop = (event) => {
   isDragging.value = false
-  const data = JSON.parse(e.dataTransfer.getData('text/plain'))
-  if (data.type === 'column') {
-    emit('move', {
-      sourceId: data.id,
-      targetId: props.id
-    })
+  const data = JSON.parse(event.dataTransfer.getData('application/json'))
+  
+  if (data.type === 'builder-element') {
+    const newElement = {
+      id: Date.now(),
+      type: data.componentType,
+      content: '',
+      settings: {}
+    }
+    
+    if (!props.column.elements) {
+      props.column.elements = []
+    }
+    
+    props.column.elements.push(newElement)
+    emit('update', props.column)
   }
 }
 
-const handleContentDragStart = (e) => {
-  e.dataTransfer.setData('text/plain', JSON.stringify({
-    type: 'content',
-    id: props.id,
-    content: content.value
-  }))
+const handleContentDragStart = (event) => {
+  event.stopPropagation()
 }
 
-const handleContentDrop = (e) => {
-  const data = JSON.parse(e.dataTransfer.getData('text/plain'))
-  if (data.type === 'content') {
-    emit('content-move', {
-      sourceId: data.id,
-      targetId: props.id
-    })
-  }
+const handleContentDrop = (event) => {
+  event.stopPropagation()
 }
 
 const triggerImageUpload = () => {
-  imageInput.value.click()
+  document.querySelector('input[type="file"]').click()
 }
 
-const handleImageUpload = (e) => {
-  const file = e.target.files[0]
+const handleImageUpload = (event) => {
+  const file = event.target.files[0]
   if (file) {
     const reader = new FileReader()
     reader.onload = (e) => {
-      if (elementType.value === 'gallery') {
-        galleryImages.value.push(e.target.result)
-      } else {
-        content.value = e.target.result
-      }
+      content.value = e.target.result
+      emit('update', props.column)
     }
     reader.readAsDataURL(file)
   }
@@ -425,5 +427,11 @@ const addGalleryImage = () => {
 
 const removeGalleryImage = (index) => {
   galleryImages.value.splice(index, 1)
+  emit('update', props.column)
 }
+
+// Debounced content update
+const debouncedUpdate = useDebounceFn((value) => {
+  updateContent(value)
+}, 300)
 </script> 
