@@ -291,7 +291,11 @@ const handleDragStart = (event, element) => {
       size: element.type === 'button' ? 'medium' : undefined,
       columns: element.type === 'gallery' ? 3 : undefined,
       gap: element.type === 'gallery' ? 16 : undefined,
-      images: element.type === 'gallery' ? [] : undefined
+      images: element.type === 'gallery' ? [] : undefined,
+      color: element.type === 'heading' ? '#000000' : undefined,
+      fontSize: element.type === 'heading' ? 24 : undefined,
+      fontSizeUnit: element.type === 'heading' ? 'px' : undefined,
+      alignment: element.type === 'heading' ? 'left' : undefined
     }
   }
   event.dataTransfer.setData('application/json', JSON.stringify(elementData))
