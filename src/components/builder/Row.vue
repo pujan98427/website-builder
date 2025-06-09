@@ -65,7 +65,7 @@
           <button
             v-for="columns in [1, 2, 3]"
             :key="columns"
-            @click="addRow(columns)"
+            @click="() => handleAddRow(columns)"
             class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <div class="flex gap-2">
@@ -267,7 +267,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, onUnmounted } from 'vue'
+import { ref, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import HeadingElement from './elements/HeadingElement.vue'
 import ButtonElement from './elements/ButtonElement.vue'
@@ -317,7 +317,10 @@ const getElementComponent = (type) => {
 
 const addColumn = () => {
   const updatedColumns = [...props.columns, { elements: [] }]
-  emit('update', { columns: updatedColumns })
+  
+  nextTick(() => {
+    emit('update', { columns: updatedColumns })
+  })
 }
 
 const updateColumnWidths = () => {
@@ -329,7 +332,10 @@ const updateColumnWidths = () => {
     ...col,
     width
   }))
-  emit('update', { columns: updatedColumns })
+  
+  nextTick(() => {
+    emit('update', { columns: updatedColumns })
+  })
 }
 
 // Watch for changes in columns array
@@ -377,7 +383,10 @@ const updateSelectedElement = (updatedElement) => {
     const updatedColumns = [...props.columns]
     updatedColumns[selectedColumnIndex.value].elements[selectedElementIndex.value] = updatedElement
     selectedElement.value = updatedElement
-    emit('update', { columns: updatedColumns })
+    
+    nextTick(() => {
+      emit('update', { columns: updatedColumns })
+    })
   }
 }
 
@@ -388,7 +397,10 @@ const deleteSelectedElement = () => {
     selectedElement.value = null
     selectedColumnIndex.value = null
     selectedElementIndex.value = null
-    emit('update', { columns: updatedColumns })
+    
+    nextTick(() => {
+      emit('update', { columns: updatedColumns })
+    })
   }
 }
 
@@ -398,7 +410,10 @@ const updateElement = (columnIndex, updatedElement) => {
   
   if (elementIndex !== -1) {
     updatedColumns[columnIndex].elements[elementIndex] = updatedElement
-    emit('update', { columns: updatedColumns })
+    
+    nextTick(() => {
+      emit('update', { columns: updatedColumns })
+    })
   }
 }
 
@@ -406,7 +421,10 @@ const removeColumn = (index) => {
   const updatedColumns = [...props.columns]
   updatedColumns.splice(index, 1)
   updateColumnWidths()
-  emit('update', { columns: updatedColumns })
+  
+  nextTick(() => {
+    emit('update', { columns: updatedColumns })
+  })
 }
 
 const handleDragOver = (event) => {
@@ -442,7 +460,9 @@ const handleDrop = (event, columnIndex) => {
     updatedColumns[columnIndex].elements.push(newElement)
 
     // Emit the update event with the new columns
-    emit('update', { columns: updatedColumns })
+    nextTick(() => {
+      emit('update', { columns: updatedColumns })
+    })
   } catch (error) {
     console.error('Error handling drop:', error)
   }
@@ -464,12 +484,27 @@ const handleClickOutside = (event) => {
   }
 }
 
-const addRow = (columns) => {
-  if (addRowPosition.value === 'top') {
-    emit('add-row-top', props.rowIndex, columns)
-  } else {
-    emit('add-row-bottom', props.rowIndex, columns)
+const handleAddRow = (columns) => {
+  const columnCount = Number(columns)
+  if (isNaN(columnCount) || columnCount <= 0) {
+    console.error('Invalid column count:', columns)
+    return
   }
+  
+  // Store position before resetting state
+  const position = addRowPosition.value
+  
+  // Reset state immediately
   showAddRowOptions.value = false
+  addRowPosition.value = null
+  
+  // Use nextTick to ensure state is reset before emitting
+  nextTick(() => {
+    if (position === 'top') {
+      emit('add-row-top', columnCount)
+    } else {
+      emit('add-row-bottom', columnCount)
+    }
+  })
 }
 </script> 

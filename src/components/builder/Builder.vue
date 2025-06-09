@@ -75,14 +75,14 @@
                 :columns="row.columns"
                 :is-preview-mode="isPreviewMode"
                 :row-index="rowIndex"
-                @update="updateRow(rowIndex, $event)"
+                @update="(event) => updateRow(rowIndex, event)"
                 @select="selectElement"
-                @delete-column="deleteColumn(rowIndex, $event)"
-                @duplicate="duplicateRow(rowIndex)"
-                @add-column="addColumn(rowIndex)"
-                @add-row-top="addRowTop(rowIndex, $event)"
-                @add-row-bottom="addRowBelow(rowIndex, $event)"
-                @delete="deleteRow"
+                @delete-column="(index) => deleteColumn(rowIndex, index)"
+                @duplicate="() => duplicateRow(rowIndex)"
+                @add-column="() => addColumn(rowIndex)"
+                @add-row-top="(columns) => addRowTop(rowIndex, columns)"
+                @add-row-bottom="(columns) => addRowBelow(rowIndex, columns)"
+                @delete="() => deleteRow(rowIndex)"
               />
             </div>
 
@@ -117,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePagesStore } from '@/store/pages'
 import Row from './Row.vue'
@@ -220,15 +220,39 @@ const addRow = (columns) => {
 }
 
 const addRowBelow = (index, columns) => {
-  pageContent.value.rows.splice(index + 1, 0, {
+  console.log('addRowBelow received:', { index, columns, type: typeof columns })
+  if (typeof columns !== 'number' || columns <= 0) {
+    console.error('Invalid column count:', columns)
+    return
+  }
+  
+  // Create new state without modifying the original
+  const newRows = [...pageContent.value.rows]
+  const newRow = {
     columns: Array(columns).fill().map(() => ({ elements: [] }))
+  }
+  newRows.splice(index + 1, 0, newRow)
+  
+  // Update state in a single operation
+  pageContent.value = {
+    ...pageContent.value,
+    rows: newRows
+  }
+  
+  // Save after state update
+  nextTick(() => {
+    savePage()
   })
-  savePage()
 }
 
 const deleteRow = (index) => {
   if (confirm('Are you sure you want to delete this row?')) {
-    pageContent.value.rows.splice(index, 1)
+    const newRows = [...pageContent.value.rows]
+    newRows.splice(index, 1)
+    pageContent.value = {
+      ...pageContent.value,
+      rows: newRows
+    }
     savePage()
   }
 }
@@ -236,7 +260,12 @@ const deleteRow = (index) => {
 const deleteColumn = (rowIndex, columnIndex) => {
   if (pageContent.value.rows[rowIndex].columns.length > 1) {
     if (confirm('Are you sure you want to delete this column?')) {
-      pageContent.value.rows[rowIndex].columns.splice(columnIndex, 1)
+      const newRows = [...pageContent.value.rows]
+      newRows[rowIndex].columns.splice(columnIndex, 1)
+      pageContent.value = {
+        ...pageContent.value,
+        rows: newRows
+      }
       savePage()
     }
   } else {
@@ -245,7 +274,12 @@ const deleteColumn = (rowIndex, columnIndex) => {
 }
 
 const updateRow = (index, updatedRow) => {
-  pageContent.value.rows[index] = updatedRow
+  const newRows = [...pageContent.value.rows]
+  newRows[index] = updatedRow
+  pageContent.value = {
+    ...pageContent.value,
+    rows: newRows
+  }
   savePage()
 }
 
@@ -290,23 +324,52 @@ const goToPages = () => {
 }
 
 const duplicateRow = (index) => {
-  const rowToDuplicate = { ...pageContent.value.rows[index] }
-  pageContent.value.rows.splice(index + 1, 0, rowToDuplicate)
+  const newRows = [...pageContent.value.rows]
+  const rowToDuplicate = { ...newRows[index] }
+  newRows.splice(index + 1, 0, rowToDuplicate)
+  pageContent.value = {
+    ...pageContent.value,
+    rows: newRows
+  }
   savePage()
 }
 
 const addColumn = (rowIndex) => {
-  if (!pageContent.value.rows[rowIndex].columns) {
-    pageContent.value.rows[rowIndex].columns = []
+  const newRows = [...pageContent.value.rows]
+  if (!newRows[rowIndex].columns) {
+    newRows[rowIndex].columns = []
   }
-  pageContent.value.rows[rowIndex].columns.push({ elements: [] })
+  newRows[rowIndex].columns.push({ elements: [] })
+  pageContent.value = {
+    ...pageContent.value,
+    rows: newRows
+  }
   savePage()
 }
 
 const addRowTop = (index, columns) => {
-  pageContent.value.rows.splice(index, 0, {
+  console.log('addRowTop received:', { index, columns, type: typeof columns })
+  if (typeof columns !== 'number' || columns <= 0) {
+    console.error('Invalid column count:', columns)
+    return
+  }
+  
+  // Create new state without modifying the original
+  const newRows = [...pageContent.value.rows]
+  const newRow = {
     columns: Array(columns).fill().map(() => ({ elements: [] }))
+  }
+  newRows.splice(index, 0, newRow)
+  
+  // Update state in a single operation
+  pageContent.value = {
+    ...pageContent.value,
+    rows: newRows
+  }
+  
+  // Save after state update
+  nextTick(() => {
+    savePage()
   })
-  savePage()
 }
 </script> 
