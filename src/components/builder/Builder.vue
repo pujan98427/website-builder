@@ -65,71 +65,38 @@
         <div class="flex-1">
           <!-- Rows -->
           <div class="space-y-8">
+            <!-- Existing Rows -->
             <div
               v-for="(row, rowIndex) in pageContent.rows"
               :key="rowIndex"
               class="relative group"
             >
-              <!-- Row Controls -->
-              <div
-                v-if="!isPreviewMode"
-                class="absolute -left-12 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <button
-                  @click="deleteRow(rowIndex)"
-                  class="p-1 bg-white rounded-full shadow-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500"
-                  title="Delete Row"
-                >
-                  <svg class="w-4 h-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
-
               <Row
                 :columns="row.columns"
                 :is-preview-mode="isPreviewMode"
+                :row-index="rowIndex"
                 @update="updateRow(rowIndex, $event)"
                 @select="selectElement"
                 @delete-column="deleteColumn(rowIndex, $event)"
+                @duplicate="duplicateRow(rowIndex)"
+                @add-column="addColumn(rowIndex)"
+                @add-row-top="addRowTop(rowIndex, $event)"
+                @add-row-bottom="addRowBelow(rowIndex, $event)"
+                @delete="deleteRow"
               />
-
-              <!-- Add Row Below -->
-              <div
-                v-if="!isPreviewMode"
-                class="mt-4 p-4 bg-white rounded-lg shadow-sm border border-gray-200"
-              >
-                <h3 class="text-sm font-medium text-gray-900 mb-3">Add Row Below</h3>
-                <div class="grid grid-cols-3 gap-4">
-                  <button
-                    v-for="columns in [1, 2, 3]"
-                    :key="columns"
-                    @click="addRowBelow(rowIndex, columns)"
-                    class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <div class="flex gap-2">
-                      <div
-                        v-for="i in columns"
-                        :key="i"
-                        class="flex-1 h-12 bg-white rounded-md shadow-sm"
-                      ></div>
-                    </div>
-                  </button>
-                </div>
-              </div>
             </div>
 
-            <!-- Add First Row -->
+            <!-- Add Row Below (shown when there are no rows) -->
             <div
               v-if="!isPreviewMode && pageContent.rows.length === 0"
-              class="p-4 bg-white rounded-lg shadow-sm border border-gray-200"
+              class="mt-4 p-4 bg-white rounded-lg shadow-sm border border-gray-200"
             >
-              <h2 class="text-lg font-medium text-gray-900 mb-4">Add Your First Row</h2>
+              <h3 class="text-sm font-medium text-gray-900 mb-3">Add Row Below</h3>
               <div class="grid grid-cols-3 gap-4">
                 <button
                   v-for="columns in [1, 2, 3]"
                   :key="columns"
-                  @click="addRow(columns)"
+                  @click="createInitialRow(columns)"
                   class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <div class="flex gap-2">
@@ -238,6 +205,13 @@ const togglePreview = () => {
   isPreviewMode.value = !isPreviewMode.value
 }
 
+const createInitialRow = (columns) => {
+  pageContent.value.rows = [{
+    columns: Array(columns).fill().map(() => ({ elements: [] }))
+  }]
+  savePage()
+}
+
 const addRow = (columns) => {
   pageContent.value.rows.push({
     columns: Array(columns).fill().map(() => ({ elements: [] }))
@@ -307,10 +281,32 @@ const savePage = () => {
 }
 
 const previewPage = () => {
-  router.push(`/${pageId.value}`)
+  const baseUrl = window.location.origin
+  window.open(`${baseUrl}/${pageId.value}`, '_blank')
 }
 
 const goToPages = () => {
   router.push('/pages')
+}
+
+const duplicateRow = (index) => {
+  const rowToDuplicate = { ...pageContent.value.rows[index] }
+  pageContent.value.rows.splice(index + 1, 0, rowToDuplicate)
+  savePage()
+}
+
+const addColumn = (rowIndex) => {
+  if (!pageContent.value.rows[rowIndex].columns) {
+    pageContent.value.rows[rowIndex].columns = []
+  }
+  pageContent.value.rows[rowIndex].columns.push({ elements: [] })
+  savePage()
+}
+
+const addRowTop = (index, columns) => {
+  pageContent.value.rows.splice(index, 0, {
+    columns: Array(columns).fill().map(() => ({ elements: [] }))
+  })
+  savePage()
 }
 </script> 
