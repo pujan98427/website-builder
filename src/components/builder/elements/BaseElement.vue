@@ -1,7 +1,7 @@
 <template>
   <div
     class="w-full h-full"
-    :class="{ 'cursor-pointer': !isPreviewMode }"
+    :class="{ 'cursor-pointer hover:ring-2 hover:ring-blue-500 rounded-lg': !isPreviewMode }"
     @click="!isPreviewMode && $emit('select', element)"
   >
     <slot></slot>

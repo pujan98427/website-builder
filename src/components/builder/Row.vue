@@ -81,163 +81,73 @@
     </div>
 
     <!-- Row Content -->
-    <div class="grid gap-4" :style="{ gridTemplateColumns: `repeat(${columns.length}, 1fr)` }">
+    <div class="grid grid-cols-12 gap-4 " :style="{ gridTemplateColumns: `repeat(${columns.length}, 1fr)` }">
       <div
-        v-for="(column, index) in columns"
-        :key="index"
-        class="relative group"
+        v-for="(column, columnIndex) in columns"
+        :key="columnIndex"
+        class="relative min-h-[100px] p-4"
+        :class="[
+          `col-span-${column.width || 6}`,
+          { 'border-2 border-dashed border-gray-300 rounded-lg': !isPreviewMode }
+        ]"
+        @dragover.prevent="handleDragOver"
+        @drop.prevent="(event) => handleDrop(event, columnIndex)"
       >
-        <!-- Column Controls -->
-        <!-- <div
-          v-if="!isPreviewMode"
-          class="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          <button
-            @click="$emit('delete-column', index)"
-            class="p-1 bg-white rounded-full shadow-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500"
-            title="Delete Column"
-          >
-            <svg class="w-4 h-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
-        </div> -->
-
-        <!-- Drop Zone -->
+        <!-- Empty Column Placeholder -->
         <div
-          v-if="!isPreviewMode"
-          class="min-h-[100px] p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors"
-          @dragover.prevent="handleDragOver"
-          @drop.prevent="handleDrop($event, index)"
+          v-if="!column.elements || column.elements.length === 0"
+          class="flex items-center justify-center h-full text-gray-500"
         >
+          Drop elements here
+        </div>
+        <div v-else class="space-y-4">
           <div
-            v-if="!column.elements || column.elements.length === 0"
-            class="flex items-center justify-center h-full text-gray-500"
+            v-for="element in column.elements"
+            :key="element.id"
+            class="relative group/element"
           >
-            Drop elements here
-          </div>
-          <div v-else class="space-y-4">
+            <!-- Element Preview -->
             <div
-              v-for="element in column.elements"
-              :key="element.id"
-              class="relative group/element"
+              class="p-4 bg-white rounded-lg shadow-sm border border-gray-200 hover:border-blue-500 transition-colors"
+              :style="{
+                marginTop: `${element.settings.marginTop}px`,
+                marginBottom: `${element.settings.marginBottom}px`,
+                marginLeft: `${element.settings.marginLeft}px`,
+                marginRight: `${element.settings.marginRight}px`,
+                paddingTop: `${element.settings.paddingTop}px`,
+                paddingBottom: `${element.settings.paddingBottom}px`,
+                paddingLeft: `${element.settings.paddingLeft}px`,
+                paddingRight: `${element.settings.paddingRight}px`
+              }"
+              @click="handleElementSelect(element, columnIndex)"
             >
-              <!-- Element Preview -->
-              <div
-                class="p-4 bg-white rounded-lg shadow-sm border border-gray-200 hover:border-blue-500 transition-colors"
-                :style="{
-                  marginTop: `${element.settings.marginTop}px`,
-                  marginBottom: `${element.settings.marginBottom}px`,
-                  marginLeft: `${element.settings.marginLeft}px`,
-                  marginRight: `${element.settings.marginRight}px`,
-                  paddingTop: `${element.settings.paddingTop}px`,
-                  paddingBottom: `${element.settings.paddingBottom}px`,
-                  paddingLeft: `${element.settings.paddingLeft}px`,
-                  paddingRight: `${element.settings.paddingRight}px`
-                }"
+              <component
+                :is="getElementComponent(element.type)"
+                :element="element"
+                :is-preview-mode="isPreviewMode"
+                @select="(el) => handleElementSelect(el, columnIndex)"
+              />
+            </div>
+
+            <!-- Element Controls -->
+            <div
+              class="absolute -top-2 -right-2 opacity-0 group-hover/element:opacity-100 transition-opacity"
+            >
+              <button
+                @click="$emit('select', element)"
+                class="p-1 bg-white rounded-full shadow-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                title="Edit Element"
               >
-                <!-- Heading Element -->
-                <component
-                  v-if="element.type === 'heading'"
-                  :is="`h${element.settings.level}`"
-                  :style="{
-                    color: element.settings.color,
-                    fontSize: `${element.settings.fontSize}${element.settings.fontSizeUnit}`,
-                    textAlign: element.settings.alignment
-                  }"
-                  class="whitespace-pre-wrap"
-                >
-                  {{ element.settings.text }}
-                </component>
-
-                <!-- Button Element -->
-                <button
-                  v-else-if="element.type === 'button'"
-                  :class="[
-                    'px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2',
-                    {
-                      'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500': element.settings.variant === 'primary',
-                      'bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500': element.settings.variant === 'secondary',
-                      'text-sm': element.settings.size === 'small',
-                      'text-base': element.settings.size === 'medium',
-                      'text-lg': element.settings.size === 'large'
-                    }
-                  ]"
-                >
-                  {{ element.settings.text }}
-                </button>
-
-                <!-- Gallery Element -->
-                <div
-                  v-else-if="element.type === 'gallery'"
-                  class="grid gap-4"
-                  :style="{
-                    gridTemplateColumns: `repeat(${element.settings.columns}, 1fr)`,
-                    gap: `${element.settings.gap}px`
-                  }"
-                >
-                  <div
-                    v-for="(image, imageIndex) in element.settings.images"
-                    :key="imageIndex"
-                    class="relative aspect-square overflow-hidden rounded-lg bg-gray-100"
-                  >
-                    <img
-                      v-if="image.url"
-                      :src="image.url"
-                      :alt="image.alt || ''"
-                      class="w-full h-full object-cover"
-                    />
-                    <div
-                      v-else
-                      class="absolute inset-0 flex items-center justify-center text-gray-400"
-                    >
-                      <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div
-                    v-if="!element.settings.images.length"
-                    class="col-span-full text-center text-gray-400 py-8"
-                  >
-                    No images added
-                  </div>
-                </div>
-              </div>
-
-              <!-- Element Controls -->
-              <div
-                class="absolute -top-2 -right-2 opacity-0 group-hover/element:opacity-100 transition-opacity"
-              >
-                <button
-                  @click="$emit('select', element)"
-                  class="p-1 bg-white rounded-full shadow-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  title="Edit Element"
-                >
-                  <svg class="w-4 h-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </button>
-              </div>
+                <svg class="w-4 h-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
-
-        <!-- Preview Mode -->
-        <div
-          v-else
-          class="space-y-4"
-        >
-          <component
-            v-for="element in column.elements"
-            :key="element.id"
-            :is="getElementComponent(element.type)"
-            :element="element"
-            :is-preview-mode="true"
-          />
-        </div>
       </div>
     </div>
+  
 
     <!-- Add row below Button -->
     <div
@@ -328,6 +238,11 @@ const updateColumnWidths = () => {
   if (totalColumns === 0) return
 
   const width = Math.floor(12 / totalColumns)
+  
+  // Check if any column needs width update
+  const needsUpdate = props.columns.some(col => col.width !== width)
+  if (!needsUpdate) return
+
   const updatedColumns = props.columns.map(col => ({
     ...col,
     width
@@ -376,6 +291,13 @@ const selectElement = (columnIndex, elementIndex, element) => {
   selectedColumnIndex.value = columnIndex
   selectedElementIndex.value = elementIndex
   selectedElement.value = { ...element }
+}
+
+const handleElementSelect = (element, columnIndex) => {
+  const elementIndex = props.columns[columnIndex].elements.findIndex(el => el.id === element.id)
+  if (elementIndex !== -1) {
+    selectElement(columnIndex, elementIndex, element)
+  }
 }
 
 const updateSelectedElement = (updatedElement) => {
@@ -458,6 +380,9 @@ const handleDrop = (event, columnIndex) => {
       updatedColumns[columnIndex].elements = []
     }
     updatedColumns[columnIndex].elements.push(newElement)
+
+    // Select the newly added element to open its settings
+    selectElement(columnIndex, updatedColumns[columnIndex].elements.length - 1, newElement)
 
     // Emit the update event with the new columns
     nextTick(() => {
