@@ -108,7 +108,7 @@
           >
             <!-- Element Preview -->
             <div
-              class="p-4 bg-white rounded-lg shadow-sm border border-gray-200 hover:border-blue-500 transition-colors"
+              class="p-4  rounded-lg  border-gray-200 hover:border-blue-500 transition-colors"
               :style="{
                 marginTop: `${element.settings.marginTop}px`,
                 marginBottom: `${element.settings.marginBottom}px`,

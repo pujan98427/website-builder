@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed right-0 top-0 h-full w-80 bg-white shadow-lg border-l border-gray-200 overflow-y-auto">
+  <div class="fixed right-0 top-0 h-full w-80 bg-white shadow-lg border-l z-[999999] border-gray-200 overflow-y-auto">
     <div class="p-6">
       <div class="flex items-center justify-between mb-6">
         <h3 class="text-lg font-medium text-gray-900">Element Settings</h3>
@@ -20,7 +20,7 @@
         <!-- Margin -->
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 mb-2">Margin</label>
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-4 gap-4">
             <div>
               <label class="block text-xs text-gray-500 mb-1">Top</label>
               <input
@@ -63,7 +63,7 @@
         <!-- Padding -->
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 mb-2">Padding</label>
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-4 gap-4">
             <div>
               <label class="block text-xs text-gray-500 mb-1">Top</label>
               <input
@@ -110,7 +110,7 @@
             <input
               type="number"
               v-model.number="localSettings.fontSize"
-              class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="flex-1 max-w-[175px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               @input="updateSettings"
             />
             <select
@@ -197,12 +197,12 @@
             </select>
           </div>
 
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Text Color</label>
+          <div class="mb-4 flex items-center justify-between gap-2">
+            <label class="block text-sm font-medium text-gray-700 ">Text Color</label>
             <input
               type="color"
               v-model="localSettings.color"
-              class="w-full h-10 px-1 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-8 h-8 rounded-full bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
               @input="updateSettings"
             />
           </div>
