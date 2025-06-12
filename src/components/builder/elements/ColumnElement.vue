@@ -43,6 +43,7 @@
 import HeadingElement from './HeadingElement.vue'
 import ButtonElement from './ButtonElement.vue'
 import GalleryElement from './GalleryElement.vue'
+import AnchorElement from './AnchorElement.vue'
 
 const props = defineProps({
   element: {
@@ -61,7 +62,8 @@ const getElementComponent = (type) => {
   const components = {
     heading: HeadingElement,
     button: ButtonElement,
-    gallery: GalleryElement
+    gallery: GalleryElement,
+    anchor: AnchorElement
   }
   return components[type]
 }

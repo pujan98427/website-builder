@@ -42,7 +42,7 @@
     >
       <button
         @click="showAddRowOptions = true; addRowPosition = 'top'"
-        class="p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+        class="p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 add-row-button"
         title="Add row"
       >
         <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -55,8 +55,7 @@
     <div
       v-if="showAddRowOptions && !isPreviewMode"
       :class="[
-        'absolute z-20 left-1/2 transform max-w-96 -translate-x-1/2',
-       
+        'absolute z-20 left-1/2 transform max-w-[720px] w-full -translate-x-1/2 add-row-options-panel',
       ]"
     >
       <div class="p-4 bg-white rounded-lg shadow-lg border border-gray-200">
@@ -156,7 +155,7 @@
     >
       <button
         @click="showAddRowOptions = true; addRowPosition = 'bottom'"
-        class="p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+        class="p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 add-row-button"
         title="Add row"
       >
         <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -182,6 +181,7 @@ import { v4 as uuidv4 } from 'uuid'
 import HeadingElement from './elements/HeadingElement.vue'
 import ButtonElement from './elements/ButtonElement.vue'
 import GalleryElement from './elements/GalleryElement.vue'
+import AnchorElement from './elements/AnchorElement.vue'
 import ElementSettings from './ElementSettings.vue'
 
 const props = defineProps({
@@ -213,16 +213,13 @@ const selectedColumnIndex = ref(null)
 const selectedElementIndex = ref(null)
 
 const getElementComponent = (type) => {
-  switch (type) {
-    case 'heading':
-      return HeadingElement
-    case 'button':
-      return ButtonElement
-    case 'gallery':
-      return GalleryElement
-    default:
-      return null
+  const components = {
+    heading: HeadingElement,
+    button: ButtonElement,
+    gallery: GalleryElement,
+    anchor: AnchorElement
   }
+  return components[type]
 }
 
 const addColumn = () => {
@@ -403,8 +400,12 @@ onUnmounted(() => {
 })
 
 const handleClickOutside = (event) => {
-  const optionsElement = document.querySelector('.add-row-options')
-  if (optionsElement && !optionsElement.contains(event.target)) {
+  // Check if click is outside the add row options panel
+  const addRowOptionsPanel = document.querySelector('.add-row-options-panel')
+  const addRowButton = document.querySelector('.add-row-button')
+  
+  if (addRowOptionsPanel && !addRowOptionsPanel.contains(event.target) && 
+      addRowButton && !addRowButton.contains(event.target)) {
     showAddRowOptions.value = false
   }
 }

@@ -124,6 +124,7 @@ import Row from './Row.vue'
 import HeadingElement from './elements/HeadingElement.vue'
 import ButtonElement from './elements/ButtonElement.vue'
 import GalleryElement from './elements/GalleryElement.vue'
+import AnchorElement from './elements/AnchorElement.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -184,6 +185,28 @@ const elements = [
       columns: 3,
       gap: 16,
       images: [],
+      marginTop: 0,
+      marginBottom: 0,
+      marginLeft: 0,
+      marginRight: 0,
+      paddingTop: 0,
+      paddingBottom: 0,
+      paddingLeft: 0,
+      paddingRight: 0
+    }
+  },
+  {
+    type: 'anchor',
+    label: 'Anchor',
+    icon: 'svg',
+    defaultSettings: {
+      text: 'Click to edit anchor',
+      link: '#',
+      target: '_self',
+      color: '#000000',
+      fontSize: 16,
+      fontSizeUnit: 'px',
+      alignment: 'left',
       marginTop: 0,
       marginBottom: 0,
       marginLeft: 0,
@@ -293,6 +316,7 @@ const handleDragStart = (event, element) => {
     defaultSettings: {
       ...element.defaultSettings,
       text: element.type === 'heading' ? 'New Heading' : 
+            element.type === 'anchor' ? 'Click to edit anchor' : 
             element.type === 'button' ? 'Click me' : '',
       level: element.type === 'heading' ? '1' : undefined,
       variant: element.type === 'button' ? 'primary' : undefined,
