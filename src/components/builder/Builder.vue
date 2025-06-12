@@ -396,4 +396,17 @@ const addRowTop = (index, columns) => {
     savePage()
   })
 }
+
+const handleRowUpdate = (rowIndex, updates) => {
+  const updatedRows = [...pageContent.value.rows]
+  updatedRows[rowIndex] = {
+    ...updatedRows[rowIndex],
+    ...updates
+  }
+  pageContent.value = {
+    ...pageContent.value,
+    rows: updatedRows
+  }
+  savePage()
+}
 </script> 

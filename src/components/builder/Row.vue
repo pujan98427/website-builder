@@ -291,35 +291,47 @@ const selectElement = (columnIndex, elementIndex, element) => {
 }
 
 const handleElementSelect = (element, columnIndex) => {
-  const elementIndex = props.columns[columnIndex].elements.findIndex(el => el.id === element.id)
-  if (elementIndex !== -1) {
-    selectElement(columnIndex, elementIndex, element)
-  }
+  selectedElement.value = element
+  selectedColumnIndex.value = columnIndex
+  selectedElementIndex.value = props.columns[columnIndex].elements.findIndex(el => el.id === element.id)
+  emit('select', element)
 }
 
-const updateSelectedElement = (updatedElement) => {
-  if (selectedColumnIndex.value !== null && selectedElementIndex.value !== null) {
+const updateSelectedElement = (updates) => {
+  if (selectedElement.value && selectedColumnIndex.value !== null && selectedElementIndex.value !== null) {
     const updatedColumns = [...props.columns]
-    updatedColumns[selectedColumnIndex.value].elements[selectedElementIndex.value] = updatedElement
-    selectedElement.value = updatedElement
+    const column = updatedColumns[selectedColumnIndex.value]
     
-    nextTick(() => {
-      emit('update', { columns: updatedColumns })
-    })
+    // Update the element in the column
+    column.elements[selectedElementIndex.value] = {
+      ...column.elements[selectedElementIndex.value],
+      ...updates,
+      settings: {
+        ...column.elements[selectedElementIndex.value].settings,
+        ...(updates.settings || {})
+      }
+    }
+    
+    // Emit the update with the new columns
+    emit('update', { columns: updatedColumns })
   }
 }
 
 const deleteSelectedElement = () => {
-  if (selectedColumnIndex.value !== null && selectedElementIndex.value !== null) {
+  if (selectedElement.value && selectedColumnIndex.value !== null && selectedElementIndex.value !== null) {
     const updatedColumns = [...props.columns]
-    updatedColumns[selectedColumnIndex.value].elements.splice(selectedElementIndex.value, 1)
+    const column = updatedColumns[selectedColumnIndex.value]
+    
+    // Remove the element from the column
+    column.elements.splice(selectedElementIndex.value, 1)
+    
+    // Emit the update with the new columns
+    emit('update', { columns: updatedColumns })
+    
+    // Clear selection
     selectedElement.value = null
     selectedColumnIndex.value = null
     selectedElementIndex.value = null
-    
-    nextTick(() => {
-      emit('update', { columns: updatedColumns })
-    })
   }
 }
 

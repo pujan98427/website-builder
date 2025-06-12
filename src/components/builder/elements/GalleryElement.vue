@@ -4,7 +4,10 @@
       'relative group',
       { 'cursor-pointer hover:ring-2 hover:ring-blue-500 rounded-lg': !isPreviewMode }
     ]"
-    @click="!isPreviewMode && $emit('select', element)"
+    @click="!isPreviewMode && handleGalleryClick"
+    @dragover.prevent="handleDragOver"
+    @dragleave.prevent="isDragging = false"
+    @drop.prevent="handleDrop"
     :style="{
       marginTop: `${element.settings.marginTop}px`,
       marginBottom: `${element.settings.marginBottom}px`,
@@ -19,7 +22,8 @@
     <div
       :class="[
         'grid gap-4',
-        `grid-cols-${element.settings.columns}`
+        `grid-cols-${element.settings.columns}`,
+        { 'border-2 border-dashed border-blue-500 bg-blue-50': isDragging }
       ]"
       :style="{ gap: `${element.settings.gap}px` }"
     >
@@ -66,7 +70,7 @@
             class="absolute inset-0 bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
           >
             <button
-              @click.stop="uploadImage(index)"
+              @click.stop="openImageUploadModal(index)"
               class="p-2 bg-white rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               title="Upload Image"
             >
@@ -90,7 +94,7 @@
       <!-- Add Image Button -->
       <button
         v-if="!isPreviewMode && (!element.settings.images || element.settings.images.length < 12)"
-        @click.stop="addImage"
+        @click.stop="openImageUploadModal()"
         class="aspect-square bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors flex items-center justify-center"
       >
         <svg class="w-12 h-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -114,11 +118,19 @@
         </svg>
       </button>
     </div>
+
+    <!-- Image Upload Modal -->
+    <ImageUploadModal
+      :is-open="showImageUploadModal"
+      @close="showImageUploadModal = false"
+      @select="handleImageSelect"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import ImageUploadModal from '../modals/ImageUploadModal.vue'
 
 const props = defineProps({
   element: {
@@ -132,6 +144,10 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['select', 'update'])
+
+const showImageUploadModal = ref(false)
+const currentImageIndex = ref(null)
+const isDragging = ref(false)
 
 onMounted(() => {
   // Initialize default settings if not present
@@ -156,18 +172,38 @@ onMounted(() => {
   }
 })
 
-const addImage = () => {
+const handleGalleryClick = (event) => {
+  // If clicking on a button or its children, don't open the modal
+  if (event.target.closest('button')) {
+    return
+  }
+  
+  // If clicking on an image or its container, don't open the modal
+  if (event.target.closest('.aspect-square')) {
+    return
+  }
+  
+  // Open the modal for adding new images
+  openImageUploadModal()
+}
+
+const openImageUploadModal = (index = null) => {
+  currentImageIndex.value = index
+  showImageUploadModal.value = true
+}
+
+const handleImageSelect = (image) => {
   const updatedElement = {
     ...props.element,
     settings: {
       ...props.element.settings,
-      images: [
-        ...(props.element.settings.images || []),
-        { url: '', alt: '' }
-      ]
+      images: currentImageIndex.value !== null
+        ? props.element.settings.images.map((img, i) => i === currentImageIndex.value ? image : img)
+        : [...(props.element.settings.images || []), image]
     }
   }
   emit('update', updatedElement)
+  showImageUploadModal.value = false
 }
 
 const removeImage = (index) => {
@@ -181,35 +217,42 @@ const removeImage = (index) => {
   emit('update', updatedElement)
 }
 
-const uploadImage = (index) => {
-  // Create a file input element
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = 'image/*'
-  
-  // Handle file selection
-  input.onchange = (event) => {
-    const file = event.target.files[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const updatedElement = {
-          ...props.element,
-          settings: {
-            ...props.element.settings,
-            images: props.element.settings.images.map((image, i) => 
-              i === index ? { ...image, url: e.target.result } : image
-            )
-          }
-        }
-        emit('update', updatedElement)
-      }
-      reader.readAsDataURL(file)
+const handleDragOver = (event) => {
+  if (!props.isPreviewMode) {
+    isDragging.value = true
+  }
+}
+
+const handleDrop = async (event) => {
+  isDragging.value = false
+  if (props.isPreviewMode) return
+
+  const files = Array.from(event.dataTransfer.files)
+  const imageFiles = files.filter(file => file.type.startsWith('image/'))
+
+  for (const file of imageFiles) {
+    try {
+      const image = await processFile(file)
+      handleImageSelect(image)
+    } catch (error) {
+      console.error('Error processing file:', error)
     }
   }
-  
-  // Trigger file selection
-  input.click()
+}
+
+const processFile = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      resolve({
+        url: e.target.result,
+        alt: file.name,
+        id: Date.now() + Math.random().toString(36).substr(2, 9)
+      })
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
 }
 </script>
 

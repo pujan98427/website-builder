@@ -181,87 +181,34 @@
 
         <!-- Heading Settings -->
         <template v-if="element.type === 'heading'">
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Heading Level</label>
-            <select
-              v-model="localSettings.level"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              @change="updateSettings"
-            >
-              <option value="1">H1</option>
-              <option value="2">H2</option>
-              <option value="3">H3</option>
-              <option value="4">H4</option>
-              <option value="5">H5</option>
-              <option value="6">H6</option>
-            </select>
-          </div>
-
-          <div class="mb-4 flex items-center justify-between gap-2">
-            <label class="block text-sm font-medium text-gray-700 ">Text Color</label>
-            <input
-              type="color"
-              v-model="localSettings.color"
-              class="w-8 h-8 rounded-full bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-              @input="updateSettings"
-            />
-          </div>
+          <HeadingSettings 
+            :settings="localSettings"
+            @update="updateSettings"
+          />
         </template>
 
         <!-- Button Settings -->
         <template v-if="element.type === 'button'">
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Button Variant</label>
-            <select
-              v-model="localSettings.variant"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              @change="updateSettings"
-            >
-              <option value="primary">Primary</option>
-              <option value="secondary">Secondary</option>
-              <option value="outline">Outline</option>
-            </select>
-          </div>
-
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Button Size</label>
-            <select
-              v-model="localSettings.size"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              @change="updateSettings"
-            >
-              <option value="small">Small</option>
-              <option value="medium">Medium</option>
-              <option value="large">Large</option>
-            </select>
-          </div>
+          <ButtonSettings 
+            :settings="localSettings"
+            @update="updateSettings"
+          />
         </template>
 
         <!-- Gallery Settings -->
         <template v-if="element.type === 'gallery'">
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Columns</label>
-            <select
-              v-model="localSettings.columns"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              @change="updateSettings"
-            >
-              <option value="1">1 Column</option>
-              <option value="2">2 Columns</option>
-              <option value="3">3 Columns</option>
-              <option value="4">4 Columns</option>
-            </select>
-          </div>
+          <GallerySettings 
+            :settings="localSettings"
+            @update="updateSettings"
+          />
+        </template>
 
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Gap</label>
-            <input
-              type="number"
-              v-model.number="localSettings.gap"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              @input="updateSettings"
-            />
-          </div>
+        <!-- Anchor Settings -->
+        <template v-if="element.type === 'anchor'">
+          <AnchorSettings 
+            :settings="localSettings"
+            @update="updateSettings"
+          />
         </template>
       </div>
 
@@ -278,6 +225,10 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import ButtonSettings from './settings/ButtonSettings.vue'
+import HeadingSettings from './settings/HeadingSettings.vue'
+import GallerySettings from './settings/GallerySettings.vue'
+import AnchorSettings from './settings/AnchorSettings.vue'
 
 const props = defineProps({
   element: {

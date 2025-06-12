@@ -8,7 +8,12 @@
         class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         @change="updateSettings"
       >
-        <option v-for="n in 6" :key="n" :value="n">H{{ n }}</option>
+        <option value="1">H1</option>
+        <option value="2">H2</option>
+        <option value="3">H3</option>
+        <option value="4">H4</option>
+        <option value="5">H5</option>
+        <option value="6">H6</option>
       </select>
     </div>
 
@@ -21,6 +26,25 @@
         class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         @input="updateSettings"
       />
+    </div>
+
+    <!-- Text Color -->
+    <div>
+      <label class="block text-sm font-medium text-gray-900 mb-2">Text Color</label>
+      <div class="flex items-center gap-2">
+        <input
+          type="color"
+          v-model="localSettings.color"
+          class="w-8 h-8 rounded-md cursor-pointer"
+          @input="updateSettings"
+        />
+        <input
+          type="text"
+          v-model="localSettings.color"
+          class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          @input="updateSettings"
+        />
+      </div>
     </div>
 
     <!-- Typography -->
@@ -132,25 +156,6 @@
         </button>
       </div>
     </div>
-
-    <!-- Text Color -->
-    <div>
-      <label class="block text-sm font-medium text-gray-900 mb-2">Text Color</label>
-      <div class="flex items-center gap-2">
-        <input
-          type="color"
-          v-model="localSettings.color"
-          class="w-8 h-8 rounded-md cursor-pointer"
-          @input="updateSettings"
-        />
-        <input
-          type="text"
-          v-model="localSettings.color"
-          class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          @input="updateSettings"
-        />
-      </div>
-    </div>
   </div>
 </template>
 
@@ -167,7 +172,7 @@ const props = defineProps({
 const emit = defineEmits(['update'])
 
 const localSettings = ref({
-  level: 1,
+  level: '1',
   text: '',
   fontFamily: 'sans',
   fontSize: 24,

@@ -16,6 +16,7 @@ const availableElements = [
   { type: 'paragraph', label: 'Paragraph' },
   { type: 'button', label: 'Button' },
   { type: 'image', label: 'Image' },
+  { type: 'gallery', label: 'Gallery' },
   { type: 'container', label: 'Container' }
 ]
 
@@ -33,7 +34,28 @@ const handleDragStart = (event, element) => {
 
 const handleDrop = (event) => {
   const elementData = JSON.parse(event.dataTransfer.getData('element'))
-  store.addElement(elementData)
+  
+  // Initialize element with default settings based on type
+  const newElement = {
+    ...elementData,
+    id: Date.now().toString(),
+    style: elementData.style || {},
+    settings: elementData.type === 'gallery' ? {
+      columns: 3,
+      gap: 16,
+      images: [],
+      marginTop: 0,
+      marginBottom: 0,
+      marginLeft: 0,
+      marginRight: 0,
+      paddingTop: 0,
+      paddingBottom: 0,
+      paddingLeft: 0,
+      paddingRight: 0
+    } : elementData.settings || {}
+  }
+  
+  store.addElement(newElement)
 }
 
 const selectElement = (element) => {

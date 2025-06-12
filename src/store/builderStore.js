@@ -119,10 +119,11 @@ export const useBuilderStore = defineStore("builder", {
     // Element Management
     addElement(element, parentId = null) {
       const newElement = {
-        id: Date.now().toString(),
+        id: element.id || Date.now().toString(),
         type: element.type,
         content: element.content || "",
         style: element.style || {},
+        settings: element.settings || {},
         children: [],
         parentId,
       };
@@ -143,7 +144,15 @@ export const useBuilderStore = defineStore("builder", {
     updateElement(elementId, updates) {
       const element = this.findElement(elementId);
       if (element) {
-        Object.assign(element, updates);
+        // Preserve existing properties while updating with new ones
+        Object.assign(element, {
+          ...element,
+          ...updates,
+          settings: {
+            ...element.settings,
+            ...(updates.settings || {}),
+          },
+        });
         this.saveToLocalStorage();
       }
     },

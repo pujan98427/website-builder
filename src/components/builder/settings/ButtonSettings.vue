@@ -2,7 +2,9 @@
   <div class="space-y-6">
     <!-- Button Text -->
     <div>
-      <label class="block text-sm font-medium text-gray-900 mb-2">Button Text</label>
+      <label class="block text-sm font-medium text-gray-900 mb-2"
+        >Button Text</label
+      >
       <input
         type="text"
         v-model="localSettings.text"
@@ -13,7 +15,9 @@
 
     <!-- Button Link -->
     <div>
-      <label class="block text-sm font-medium text-gray-900 mb-2">Button Link</label>
+      <label class="block text-sm font-medium text-gray-900 mb-2"
+        >Button Link</label
+      >
       <input
         type="text"
         v-model="localSettings.link"
@@ -77,7 +81,9 @@
       <div class="space-y-4">
         <!-- Background Color -->
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Background Color</label>
+          <label class="block text-sm text-gray-600 mb-1"
+            >Background Color</label
+          >
           <div class="flex items-center gap-2">
             <input
               type="color"
@@ -218,39 +224,43 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch } from "vue";
 
 const props = defineProps({
   settings: {
     type: Object,
-    required: true
-  }
-})
+    required: true,
+  },
+});
 
-const emit = defineEmits(['update'])
+const emit = defineEmits(["update"]);
 
 const localSettings = ref({
-  text: 'Button',
-  link: '',
-  variant: 'primary',
-  size: 'medium',
+  text: "Button",
+  link: "",
+  variant: "primary",
+  size: "medium",
   fullWidth: false,
-  backgroundColor: '#3b82f6',
-  textColor: '#ffffff',
-  fontFamily: 'sans',
-  fontWeight: 'medium',
-  letterSpacing: 'normal',
+  backgroundColor: "#3b82f6",
+  textColor: "#ffffff",
+  fontFamily: "sans",
+  fontWeight: "medium",
+  letterSpacing: "normal",
   borderRadius: 6,
-  borderColor: '#3b82f6',
-  shadow: 'none',
-  ...props.settings
-})
+  borderColor: "#3b82f6",
+  shadow: "none",
+  ...props.settings,
+});
 
-watch(() => props.settings, (newSettings) => {
-  localSettings.value = { ...localSettings.value, ...newSettings }
-}, { deep: true })
+watch(
+  () => props.settings,
+  (newSettings) => {
+    localSettings.value = { ...localSettings.value, ...newSettings };
+  },
+  { deep: true }
+);
 
 const updateSettings = () => {
-  emit('update', { ...localSettings.value })
-}
-</script> 
+  emit("update", { ...localSettings.value });
+};
+</script>

@@ -6,7 +6,7 @@
       <div class="space-y-4">
         <!-- Columns -->
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Columns</label>
+          <label class="block text-sm font-medium text-gray-900 mb-2">Columns</label>
           <select
             v-model="localSettings.columns"
             class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -21,11 +21,11 @@
 
         <!-- Gap -->
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Gap</label>
+          <label class="block text-sm font-medium text-gray-900 mb-2">Gap</label>
           <div class="flex items-center gap-2">
             <input
               type="number"
-              v-model="localSettings.gap"
+              v-model.number="localSettings.gap"
               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               @input="updateSettings"
             />
@@ -55,27 +55,28 @@
     <div>
       <h4 class="text-sm font-medium text-gray-900 mb-3">Image Settings</h4>
       <div class="space-y-4">
-        <!-- Object Fit -->
+        <!-- Image Size -->
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Object Fit</label>
+          <label class="block text-sm text-gray-600 mb-1">Image Size</label>
           <select
-            v-model="localSettings.objectFit"
+            v-model="localSettings.imageSize"
             class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             @change="updateSettings"
           >
-            <option value="cover">Cover</option>
-            <option value="contain">Contain</option>
-            <option value="fill">Fill</option>
+            <option value="thumbnail">Thumbnail</option>
+            <option value="medium">Medium</option>
+            <option value="large">Large</option>
+            <option value="full">Full Size</option>
           </select>
         </div>
 
-        <!-- Border Radius -->
+        <!-- Image Border Radius -->
         <div>
           <label class="block text-sm text-gray-600 mb-1">Border Radius</label>
           <div class="flex items-center gap-2">
             <input
               type="number"
-              v-model="localSettings.borderRadius"
+              v-model.number="localSettings.borderRadius"
               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               @input="updateSettings"
             />
@@ -83,17 +84,17 @@
           </div>
         </div>
 
-        <!-- Max Images -->
+        <!-- Show Captions -->
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Maximum Images</label>
-          <input
-            type="number"
-            v-model="localSettings.maxImages"
-            min="1"
-            max="12"
-            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            @input="updateSettings"
-          />
+          <label class="flex items-center gap-2 text-sm text-gray-600">
+            <input
+              type="checkbox"
+              v-model="localSettings.showCaptions"
+              class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              @change="updateSettings"
+            />
+            Show Captions
+          </label>
         </div>
       </div>
     </div>
@@ -151,8 +152,9 @@ const localSettings = ref({
   columns: 3,
   gap: 16,
   aspectRatio: '1/1',
-  objectFit: 'cover',
+  imageSize: 'medium',
   borderRadius: 0,
+  showCaptions: false,
   maxImages: 12,
   images: [],
   ...props.settings
